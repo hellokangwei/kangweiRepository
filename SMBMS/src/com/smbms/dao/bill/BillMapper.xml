@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.smbms.dao.bill.BillMapper">
+	
+	<resultMap type="Bill" id="billResult">
+		<id property="id" column="id" />
+		<result property="billCode" column="billCode" />
+		<result property="productName" column="productName" />
+		<result property="productDesc" column="productDesc" />
+		<result property="productUnit" column="productUnit" />
+		<result property="productCount" column="productCount" />
+		<result property="totalPrice" column="totalPrice" />
+		<result property="isPayment" column="isPayment" />
+		<!-- 一对一 -->
+		<association property="provider" javaType="Provider">
+			<id property="id" column="p_id" />
+			<result property="proCode" column="proCode" />
+			<result property="proName" column="proName" />
+			<result property="proDesc" column="proDesc" />
+		</association>
+	</resultMap>
+	
+	<!-- 修改订单信息 -->
+	<update id="updateBill">
+		UPDATE smbms_bill SET productName=#{bill.productName},productDesc=#{bill.productDesc},
+			productUnit=#{bill.productUnit},productCount=#{bill.productCount},totalPrice=#{bill.totalPrice},
+			isPayment=#{bill.isPayment},modifyBy=#{bill.modifyBy},modifyDate=#{bill.modifyDate},providerId=#{providerId}
+		where id=#{bill.id}
+	</update>
+	
+	<!-- 新增订单 -->
+	<insert id="addbill">
+		INSERT INTO smbms_bill(billCode,productName,productDesc,productUnit,
+			productCount,totalPrice,isPayment,createdBy,creationDate,providerId) 
+		values(#{bill.billCode},#{bill.productName},#{bill.productDesc},#{bill.productUnit},
+		#{bill.productCount},#{bill.totalPrice},#{bill.isPayment},#{bill.createdBy},#{bill.creationDate},#{providerId})
+	</insert>
+	
+	<!-- 根据订单id查询订单是否存在 -->
+	<select id="checkBillById" resultType="int">
+		select count(*) from smbms_bill where id=#{id}
+	</select>
+	
+	<!-- 根据订单id删除订单 -->
+	<delete id="deleteBillById">
+		DELETE FROM smbms_bill WHERE id=#{id}
+	</delete>
+	
+	<!-- 根据订单id获取订单信息 -->
+	<select id="getBillById" resultMap="billResult">
+		select b.*,p.`id` AS p_id,p.`proCode`,p.`proName`,p.`proDesc` 
+			from smbms_bill b , smbms_provider p 
+			where p.`id`= b.`providerId` and b.id=#{id}
+	</select>
+	
+	<!-- 根据条件查询订单总条数 -->
+	<select id="getBillCount" resultType="int">
+		select count(*) from smbms_bill b , smbms_provider p 
+			where p.`id`= b.`providerId`
+			<if test="productName != null and productName != ''">
+					and productName like concat('%',#{productName},'%')
+				</if>
+			<if test="provderId != null and provderId != -1">
+				and b.`providerId` = #{provderId}
+			</if>
+			<if test="isPayment != null and isPayment != -1">
+				and isPayment = #{isPayment}
+			</if>
+	</select>
+	
+	<!-- 获取供应商名称下拉框 -->
+	<select id="getProvider" resultType="Provider">
+		SELECT id,proName FROM smbms_provider
+	</select>
+	
+	<!-- 查询订单信息 -->
+	<select id="getBillInfo" resultMap="billResult">
+		select b.*,p.`id` AS p_id,p.`proCode`,p.`proName`,p.`proDesc` 
+			from smbms_bill b , smbms_provider p 
+			where p.`id`= b.`providerId`
+			<if test="productName != null and productName != ''">
+				and productName like concat('%',#{productName},'%')
+			</if>
+			<if test="provderId != null and provderId != -1">
+				and b.`providerId` = #{provderId}
+			</if>
+			<if test="isPayment != null and isPayment != -1">
+				and isPayment = #{isPayment}
+			</if>
+			order by b.`id` desc
+			limit #{page.num},#{page.pageSize}
+	</select>
+</mapper>

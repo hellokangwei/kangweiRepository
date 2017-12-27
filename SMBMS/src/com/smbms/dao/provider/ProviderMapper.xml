@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.smbms.dao.provider.ProviderMapper">
+
+	<!-- 新增供应商 -->
+	<insert id="addProvider">
+		INSERT INTO smbms_provider(proCode,proName,proDesc,
+			proContact,proPhone,proAddress,proFax,
+			createdBy,creationDate) 
+			values(#{proCode},#{proName},#{proDesc},
+			#{proContact},#{proPhone},#{proAddress},
+			#{proFax},#{createdBy},#{creationDate})
+	</insert>
+
+	<!-- 检查供应商是否存在 -->
+	<select id="checkProviderIsExist" resultType="int">
+		SELECT COUNT(*) FROM smbms_provider where id=#{id}
+	</select>
+	
+	<!-- 检查供应商是否存在订单 ，存在则不能删除供应商-->
+	<select id="checkBillIsExist" resultType="int">
+		SELECT COUNT(*) FROM smbms_bill WHERE providerId=#{id}
+	</select>
+
+	<!-- 删除供应商信息 -->
+	<delete id="deleteProvider">
+		delete from smbms_provider where id=#{id}
+	</delete>
+
+	<!-- 修改供应商信息 -->
+	<update id="updateProvider">
+		update smbms_provider SET proName=#{provider.proName},
+			proDesc=#{provider.proDesc},proContact=#{provider.proContact},
+			proPhone=#{provider.proPhone},proAddress=#{provider.proAddress},
+			proFax=#{provider.proFax},modifyDate=#{provider.modifyDate},
+			modifyBy=#{provider.modifyBy} 
+		 where id = #{provider.id}
+	</update>
+
+	<!-- 查看供应商信息 -->
+	<select id="searchProView" resultType="Provider">
+		SELECT * FROM smbms_provider where id=#{id}
+	</select>
+
+	<!-- 根据编码和名称获取供应商总条数 -->
+	<select id="getProviderCount" resultType="int">
+		SELECT count(*) FROM smbms_provider
+		<trim prefix="where" prefixOverrides="and | or" >
+			<if test="proCode != null and proCode != ''">
+				and proCode  like concat('%',#{proCode},'%')
+			</if>
+			<if test="proName != null and proName != ''">
+				and proName like concat('%',#{proName},'%')
+			</if>
+		</trim>
+	</select>
+	
+	<!-- 根据编码和名称获取供应商信息 -->
+	<select id="getProviderList" resultType="Provider">
+		SELECT * FROM smbms_provider
+		<trim prefix="where" prefixOverrides="and | or" >
+			<if test="proCode != null and proCode != ''">
+				and proCode  like concat('%',#{proCode},'%')
+			</if>
+			<if test="proName != null and proName != ''">
+				and proName like concat('%',#{proName},'%')
+			</if>
+		</trim>
+		order by id desc
+		limit #{page.num},#{page.pageSize}
+	</select>
+</mapper>
